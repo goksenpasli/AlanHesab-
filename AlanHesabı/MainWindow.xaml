@@ -1,0 +1,288 @@
+﻿<Window
+    x:Class="AlanHesabı.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="clr-namespace:AlanHesabı"
+    xmlns:m="clr-namespace:System.Windows.Media;assembly=PresentationCore"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    x:Name="window"
+    Title="Yazı Alan Hesabı"
+    Width="640"
+    Height="480"
+    d:DataContext="{d:DesignInstance Type=local:Hesaplama}"
+    Loaded="Window_Loaded"
+    UseLayoutRounding="True"
+    WindowStartupLocation="CenterScreen"
+    WindowState="Maximized"
+    mc:Ignorable="d">
+    <Window.Resources>
+        <local:DpiConverter x:Key="DpiConverter" />
+        <local:StringToBrushConverter x:Key="StringToBrushConverter" />
+    </Window.Resources>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="1*" />
+            <RowDefinition Height="1*" />
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition />
+            <ColumnDefinition />
+            <ColumnDefinition Width="116.8" />
+        </Grid.ColumnDefinitions>
+        <StackPanel Grid.ColumnSpan="2">
+            <HeaderedContentControl Header="YAZI">
+                <TextBox x:Name="TbText" TextWrapping="Wrap" />
+            </HeaderedContentControl>
+            <HeaderedContentControl Header="YAZI TİPİ">
+                <ComboBox
+                    x:Name="CbFont"
+                    ItemsSource="{x:Static m:Fonts.SystemFontFamilies}"
+                    SelectedIndex="0">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock FontFamily="{Binding Source}" Text="{Binding Source}">
+                                <TextBlock.ToolTip>
+                                    <ToolTip>
+                                        <TextBlock
+                                            FontFamily="{Binding Source}"
+                                            FontSize="100"
+                                            Text="Örnek Yazı" />
+                                    </ToolTip>
+                                </TextBlock.ToolTip>
+                            </TextBlock>
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                    <ComboBox.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <VirtualizingStackPanel />
+                        </ItemsPanelTemplate>
+                    </ComboBox.ItemsPanel>
+                </ComboBox>
+            </HeaderedContentControl>
+            <HeaderedContentControl Header="BOYUT">
+                <ComboBox
+                    x:Name="CbSize"
+                    ItemsSource="{Binding FontWidth}"
+                    SelectedIndex="11">
+                    <ComboBox.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <VirtualizingStackPanel />
+                        </ItemsPanelTemplate>
+                    </ComboBox.ItemsPanel>
+                </ComboBox>
+            </HeaderedContentControl>
+            <HeaderedContentControl Header="RENK">
+                <HeaderedContentControl.Resources>
+                    <ObjectDataProvider
+                        x:Key="Renkler"
+                        MethodName="GetProperties"
+                        ObjectInstance="{x:Type Colors}" />
+                </HeaderedContentControl.Resources>
+                <ComboBox
+                    x:Name="CbRenk"
+                    ItemsSource="{Binding Source={StaticResource Renkler}}"
+                    ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                    SelectedValue="{Binding SeçiliRenk, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                    SelectedValuePath="Name"
+                    ToolTip="Renk">
+                    <ComboBox.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <WrapPanel IsItemsHost="True" Orientation="Horizontal" />
+                        </ItemsPanelTemplate>
+                    </ComboBox.ItemsPanel>
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate>
+                            <Rectangle
+                                Width="32"
+                                Height="32"
+                                Fill="{Binding Name, Converter={StaticResource StringToBrushConverter}}" />
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
+            </HeaderedContentControl>
+        </StackPanel>
+        <Border
+            Grid.Row="1"
+            Grid.ColumnSpan="3"
+            Margin="30"
+            BorderThickness="0.5">
+            <Border.BorderBrush>
+                <VisualBrush>
+                    <VisualBrush.Visual>
+                        <Rectangle
+                            Width="{Binding RelativeSource={RelativeSource AncestorType={x:Type Border}}, Path=ActualWidth}"
+                            Height="{Binding RelativeSource={RelativeSource AncestorType={x:Type Border}}, Path=ActualHeight}"
+                            Stroke="Gray"
+                            StrokeDashArray="4 2"
+                            StrokeThickness="1" />
+                    </VisualBrush.Visual>
+                </VisualBrush>
+            </Border.BorderBrush>
+            <Grid
+                x:Name="Grid"
+                MouseLeftButtonDown="Grid_MouseLeftButtonDown"
+                PreviewMouseMove="Grid_PreviewMouseMove">
+                <Path
+                    x:Name="Şekil"
+                    Data="{Binding GeometryData}"
+                    Stroke="{Binding SeçiliRenk}"
+                    StrokeThickness="1" />
+                <TextBlock
+                    x:Name="TbYazı"
+                    FontFamily="{Binding ElementName=CbFont, Path=SelectedItem}"
+                    FontSize="{Binding SelectedItem, Converter={StaticResource DpiConverter}, ElementName=CbSize, TargetNullValue=12}"
+                    Foreground="Blue"
+                    Text="{Binding ElementName=TbText, Path=Text}">
+                    <TextBlock.Style>
+                        <Style TargetType="TextBlock">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding ElementName=TbGöster, Path=IsChecked}" Value="true">
+                                    <Setter Property="Visibility" Value="Hidden" />
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding ElementName=TbGöster, Path=IsChecked}" Value="false">
+                                    <Setter Property="Visibility" Value="Visible" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </TextBlock.Style>
+                </TextBlock>
+            </Grid>
+        </Border>
+        <UniformGrid
+            Grid.Row="0"
+            Grid.Column="3"
+            Rows="3">
+            <ToggleButton x:Name="TbGöster" Content="YAZIYI GÖSTER GİZLE" />
+            <Button
+                x:Name="BtnAlan"
+                Command="{Binding AlanHesap, Mode=OneWay}"
+                CommandParameter="{Binding Mode=OneWay}">
+                <Button.Content>
+                    <StackPanel>
+                        <TextBlock Text="ALANI AKTAR" />
+                        <TextBlock HorizontalAlignment="Center" Foreground="Red">
+                            <Run Text="{Binding Alan, StringFormat=\{0:F\}}" />
+                            <Run Text="CM2" />
+                        </TextBlock>
+                    </StackPanel>
+                </Button.Content>
+            </Button>
+            <Button
+                Command="{Binding YeniHesap, Mode=OneWay}"
+                CommandParameter="{Binding Mode=OneWay}"
+                Content="YENİ ALAN ÇİZİM" />
+        </UniformGrid>
+        <GroupBox
+            Grid.Row="2"
+            Grid.ColumnSpan="3"
+            Header="HESAP">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition />
+                    <ColumnDefinition />
+                    <ColumnDefinition />
+                </Grid.ColumnDefinitions>
+                <GroupBox>
+                    <GroupBox.Header>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="TOPLAM ALAN " />
+                            <TextBlock Foreground="Red">
+                                <Run Text="{Binding ToplamAlan}" />
+                                <Run Text="CM2" />
+                            </TextBlock>
+                        </StackPanel>
+                    </GroupBox.Header>
+                    <DataGrid
+                        AutoGenerateColumns="False"
+                        CanUserAddRows="False"
+                        CanUserDeleteRows="False"
+                        ItemsSource="{Binding TopluHesaplamaListe}">
+                        <DataGrid.Columns>
+                            <DataGridTemplateColumn>
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <ContentControl Background="{Binding SeçiliRenk, Mode=OneWay}" Template="{StaticResource EyeDraw}">
+                                            <ContentControl.ToolTip>
+                                                <ToolTip>
+                                                    <Path
+                                                        Data="{Binding GeometryData}"
+                                                        Stroke="{Binding SeçiliRenk, Mode=OneWay}"
+                                                        StrokeThickness="1" />
+                                                </ToolTip>
+                                            </ContentControl.ToolTip>
+                                        </ContentControl>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTextColumn
+                                Binding="{Binding Alan, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                Header="ALAN"
+                                IsReadOnly="True" />
+                            <DataGridTextColumn Binding="{Binding Derinlik, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Header="DERİNLİK&#10;(CM)" />
+                            <DataGridTextColumn Binding="{Binding BirimFiyat, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Header="HACİM BİRİM&#10;FİYAT (TL)" />
+                            <DataGridTemplateColumn>
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Button
+                                            x:Name="BtnHesap"
+                                            Command="{Binding TopluHesaplama, Mode=OneWay}"
+                                            CommandParameter="{Binding Mode=OneWay}"
+                                            Content="HESAPLA">
+                                            <Button.Style>
+                                                <Style TargetType="Button">
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding BirimFiyat}" Value="0">
+                                                            <Setter Property="IsEnabled" Value="False" />
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding Alan}" Value="0">
+                                                            <Setter Property="IsEnabled" Value="False" />
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding Derinlik}" Value="0">
+                                                            <Setter Property="IsEnabled" Value="False" />
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Button.Style>
+                                        </Button>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </GroupBox>
+                <Grid Grid.Column="2" ShowGridLines="True">
+                    <Grid.RowDefinitions>
+                        <RowDefinition />
+                        <RowDefinition />
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition />
+                        <ColumnDefinition />
+                    </Grid.ColumnDefinitions>
+                    <Canvas
+                        x:Name="cnv"
+                        Grid.RowSpan="2"
+                        Grid.ColumnSpan="2"
+                        IsHitTestVisible="False">
+                        <Rectangle
+                            x:Name="rct"
+                            Width="{Binding ElementName=cnv, Path=ActualWidth}"
+                            Height="{Binding ElementName=cnv, Path=ActualHeight}"
+                            Stroke="Black"
+                            StrokeThickness="1">
+                            <Rectangle.Fill>
+                                <VisualBrush
+                                    Viewbox="0,0,50,50"
+                                    ViewboxUnits="Absolute"
+                                    Viewport="0,0,1,1"
+                                    ViewportUnits="RelativeToBoundingBox" />
+                            </Rectangle.Fill>
+                        </Rectangle>
+                    </Canvas>
+                </Grid>
+            </Grid>
+        </GroupBox>
+    </Grid>
+</Window>
